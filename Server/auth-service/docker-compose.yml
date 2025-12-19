@@ -15,7 +15,7 @@ services:
     command: sh -c "sleep 10 && python manage.py makemigrations authentication && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 auth_service.wsgi:application"
     volumes:
       - .:/app
-      - static_volume:/app/static  # Add this for persisting/serving static files
+      - static_volume:/app/static
     ports:
       - "8000:8000"
     depends_on:

@@ -3,25 +3,32 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from datetime import timedelta
+
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('user', 'User'),
         ('pharmacy', 'Pharmacy'),
         ('pharmacy_admin', 'Pharmacy Admin'),
+        ('admin', 'Admin'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True)
-
     is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
 class PharmacyProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role__in': ['pharmacy', 'pharmacy_admin']})
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role__in': ['pharmacy', 'pharmacy_admin']}
+    )
     license_number = models.CharField(max_length=50)
     address = models.TextField()
+
 class EmailVerificationOTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6)
@@ -40,3 +47,4 @@ class EmailVerificationOTP(models.Model):
 
     class Meta:
         unique_together = ('user', 'code')
+
