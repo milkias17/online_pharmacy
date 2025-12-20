@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-backend
+  name: payment-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth
+      app: payment
   template:
     metadata:
       labels:
-        app: auth
+        app: payment
     spec:
       containers:
-      - name: auth
-        image: miheret217/auth-service:latest 
+      - name: payment
+        image: miheret217/payment-service:latest 
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -22,21 +22,19 @@ spec:
           - name: DATABASE_URL
             value: "postgres://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
           - name: SECRET_KEY
-            value: "django-insecure-pharmacy-system-key-2024"
+            value: "payment-service-secret-key-123"
           - name: DEBUG
-            value: "True"
-          - name: ALLOWED_HOSTS
-            value: "*"
+            value: "False"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: payment-service
 spec:
   selector:
-    app: auth
+    app: payment
   ports:
     - protocol: TCP
-      port: 80
+      port: 80        
       targetPort: 8000
   type: ClusterIP

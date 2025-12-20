@@ -19,7 +19,6 @@ spec:
         ports:
         - containerPort: 3000
         env:
-          # Connection string for Prisma
           - name: DATABASE_URL
             value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
           - name: PORT

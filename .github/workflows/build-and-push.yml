@@ -18,6 +18,10 @@ jobs:
             directory: ./Server/inventory-service
           - service_name: notification-service
             directory: ./Server/pharmacy-notification-service
+          - service_name: order-service
+            directory: ./Server/order_service
+          - service_name: payment-service
+            directory: ./Server/payment-service
 
     steps:
       - name: Checkout Code

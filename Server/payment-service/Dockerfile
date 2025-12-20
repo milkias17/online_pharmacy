@@ -1,22 +1,27 @@
-# Use official Python runtime as a parent image
+# Use a consistent Python version
 FROM python:3.11-slim
 
-# Set environment variables
+# Prevent Python from writing .pyc files and enable real-time logging
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set work directory
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Install system dependencies for PostgreSQL
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy project
+# Install Python dependencies
+COPY requirements.txt /app/
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+
+# Copy the code
 COPY . /app/
 
-# Expose port from container
+# Expose Django port
 EXPOSE 8000
 
-# Run gunicorn
+# Start with Gunicorn for production-grade performance
 CMD ["gunicorn", "payment_service.wsgi:application", "--bind", "0.0.0.0:8000"]
