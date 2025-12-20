@@ -1,109 +1,124 @@
-# Online Pharmacy Ordering System
+# 💊 Medivo: Distributed Online Pharmacy Ecosystem
 
-### Project Phase 0: Initiation \& Proposal
+<p align="center">
+<img src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white" />
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+<img src="https://img.shields.io/badge/ArgoCD-FF7F01?style=for-the-badge&logo=argo&logoColor=white" />
+<img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white" />
+<img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" />
+</p>
 
+Transforming fragmented pharmaceutical silos into a unified, high-availability hyperlocal marketplace. ⚡
 
-***
+---
 
-## Overview
+## 📖 Project Overview
 
-The Online Pharmacy Ordering System is a microservices-based web application designed to make accessing medicines more convenient. The system enables users to search for medicines, check availability at nearby pharmacies, and place secure online orders—including prescriptions—without needing to visit physical stores.
+Medivo is a polyglot microservices web application that bridges physical pharmacies and digital patients. Instead of centralized inventory, Medivo uses a distributed aggregation model so patients can query real-time stock across city-wide pharmacy nodes and place secure purchases with prescription handling.
 
-It also allows pharmacies to update their inventories in real time and provides automated order updates to users through a publish/subscribe (Pub/Sub) notification model.
+---
 
-***
+## 🌟 Key Features
 
-## Problem Statement
+- 🔍 **Hyperlocal Search:** Find the nearest pharmacy with real-time stock.
+- 🛒 **Secure Checkout:** ACID-compliant transaction management for medicine orders.
+- 📄 **Prescription Handling:** Secure upload and validation workflow.
+- 🔔 **Real-time Alerts:** Pub/Sub notifications for order status and low stock.
+- 🏗️ **Cloud-Native:** Fully orchestrated with Kubernetes and managed via GitOps.
 
-In many areas, pharmacies are not easily accessible, especially for people with health limitations or those living in remote regions. Often, customers visit multiple pharmacies only to find that the required medicines are unavailable.
+---
 
-This project aims to address these challenges by developing a system that simplifies medicine discovery and ordering, helping users find the nearest pharmacy with available stock—efficiently and securely.
+## 🏗️ System Architecture
 
-***
+Our system uses a decoupled, event-driven architecture for scale and fault tolerance.
 
-## Objectives
+| Service              | Language / Stack             | Responsibility                                        |
+| :------------------- | :--------------------------- | :---------------------------------------------------- |
+| Auth Service         | 🐍 **Python / Django**       | Identity management & JWT-based security.             |
+| Inventory Service    | ☕ **Java / Spring Boot**    | High-concurrency stock tracking & optimistic locking. |
+| Notification Service | 🟢 **Node.js / Prisma**      | Asynchronous event fan-out & user alerting.           |
+| Database             | 🐘 **PostgreSQL (Supabase)** | Persistent storage via distributed cluster.           |
 
-- Allow users to securely register, log in, and search for medicines.
-- Enable customers to place online medicine orders with prescription upload support.
-- Allow pharmacies to update stock in real time.
-- Notify customers about order status updates using a Pub/Sub model.
-- Maintain reliable order logs and consistent inventory data using distributed services.
+---
 
-***
+## 🛠️ Technology Stack
 
-## System Architecture (High-Level)
+**Backend & Logic**
 
-The system follows a microservices architecture composed of the following services:
+- Java (Spring Boot) — Inventory
+- Python (Django) — Auth & business logic
+- Node.js — Notification & lightweight event processors
 
+**DevOps & Infrastructure**
 
-| Service | Responsibility |
-| :-- | :-- |
-| **Auth Service** | Manages users and pharmacy accounts (authentication \& authorization). |
-| **Inventory Service** | Stores, updates, and tracks medicine stock across pharmacies. |
-| **Order Service** | Handles customer orders, including prescription validation and fulfillment. |
-| **Notification Service** | Publishes order updates to subscribed users instantly. |
+- Orchestration: Kubernetes (k3s / k3d)
+- GitOps: ArgoCD for automated deployment
+- CI/CD: GitHub Actions (Docker builds & image publishing)
+- Containerization: Docker (multi-stage optimized images)
 
-Services communicate via REST APIs, with asynchronous messaging handled through a Pub/Sub message broker (Redis or RabbitMQ).
-Persistent storage will be managed using either **MongoDB** or **PostgreSQL**.
+---
 
-***
+## 🚀 Quick Start (Cloud-Native Deployment)
 
-## Key Technologies
+> These steps assume you are using a development environment such as GitHub Codespaces or a local machine with Docker and kubectl configured.
 
-- **Backend:** Django
-- **Frontend (optional):** React / Next.js
-- **Database:** MongoDB / PostgreSQL
-- **Message Broker:** Redis Pub/Sub or RabbitMQ
-- **Deployment:** Docker + Docker Compose
+1. Install k3d (Kubernetes in Docker):
 
-***
+```bash
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+k3d cluster create pharmacy-cluster -p "8080:80@loadbalancer"
+```
 
-## Risks and Mitigation
+2. Deploy ArgoCD:
 
-| Risk | Mitigation |
-| :-- | :-- |
-| Message delivery failure between services | Implement retry logic for failed message handling. |
-| Inconsistent inventory data | Use transactions and versioned updates to ensure stock accuracy. |
-| Team coordination issues | Maintain task tracking, clear role definitions, and regular stand-ups. |
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
+3. Apply manifests / Let ArgoCD sync the `./k8s` folder:
 
-***
+- ArgoCD will automatically pull and sync the `./k8s` directory to keep the cluster healthy.
 
-## Project Timeline
+4. Additional service-specific steps are in each service folder (see `Server/*`):
 
-| Week | Date | Milestone | Deliverable |
-| :-- | :-- | :-- | :-- |
-| Week 6 | Nov 07, 2025 | Project Initiation | Team contract, problem statement, scope, GitHub setup |
-| Week 8 | Nov 21, 2025 | System Architecture | Architecture diagram, APIs, message flows, data model |
-| Week 10 | Dec 05, 2025 | Progress Review | Service skeletons, partial APIs, CI/CD pipeline, communication tests |
-| Week 12 | Dec 19, 2025 | Integration \& Testing | Integrated services, test report, API documentation, deployment notes |
-| Week 14 | Jan 02, 2026 | Final Demo | Working system demo, presentation deck, final project report |
+- `Server/auth-service`, `Server/inventory-service`, `Server/payment-service`, `Server/pharmacy-notification-service`.
 
+---
 
-***
+## 📊 Project Roadmap
 
-## Team Members
+| Phase   | Milestone                              | Status         |
+| :------ | :------------------------------------- | :------------- |
+| Phase 0 | Initiation & Team Contract             | ✅ Complete    |
+| Phase 1 | Containerization & K8s Architecture    | ✅ Complete    |
+| Phase 2 | Frontend Integration (Next.js)         | ⏳ In Progress |
+| Phase 3 | Resilience Testing (Chaos Engineering) | 📅 Scheduled   |
+| Phase 4 | Final Distributed Demo                 | 📅 Jan 2026    |
 
-| Name | ID | Role | Email |
-| :-- | :-- | :-- | :-- |
-| Miheret Girmachew | ETS 1071/14 | Project Lead \& Frontend/UI Developer | [miheret.girmachew@aastustudent.edu.et](mailto:miheret.girmachew@aastustudent.edu.et) |
-| Mihret Desalegn | ETS 1074/14 | Backend Developer \& Documentation Lead | [mihret.desalegn@aastustudent.edu.et](mailto:mihret.desalegn@aastustudent.edu.et) |
-| Mikiyas Alemayehu Mekonen | ETS 1086/14 | Backend Developer \& Documentation Lead | [mikiyas.alemayehum@aastustudent.edu.et](mailto:mikiyas.alemayehum@aastustudent.edu.et) |
-| Mikiyas Alemayehu Gebrewold | ETS 1087/14 | Integration / Pub-Sub Engineer | [mikiyas.alemayehug@aastustudent.edu.et](mailto:mikiyas.alemayehug@aastustudent.edu.et) |
-| Milkias Yeheyis | ETS 1100/14 | DevOps \& QA Engineer | [milkias.yeheyis@aastustudent.edu.et](mailto:milkias.yeheyis@aastustudent.edu.et) |
+---
 
+## 👥 The Team
 
-***
+| Name                 | Role                           | Email                                  |
+| :------------------- | :----------------------------- | :------------------------------------- |
+| Miheret Girmachew    | Project Lead & Cloud Architect | miheret.girmachew@aastustudent.edu.et  |
+| Mihret Desalegn      | Backend & Documentation Lead   | mihret.desalegn@aastustudent.edu.et    |
+| Mikiyas Alemayehu M. | Backend Developer              | mikiyas.alemayehum@aastustudent.edu.et |
+| Mikiyas Alemayehu G. | Integration & Pub-Sub Engineer | mikiyas.alemayehug@aastustudent.edu.et |
+| Milkias Yeheyis      | DevOps & QA Engineer           | milkias.yeheyis@aastustudent.edu.et    |
 
-## Team Contract
+---
 
-- All members contribute via Git commits and a shared task board.
-- Communication through Telegram and weekly in-person sync meetings.
-- Conflicts are first resolved through discussion; unresolved issues are mediated by the Project Lead.
+## 🤝 Team Contract
 
-***
+- **Contribution:** Mandatory Git commits for every feature; task tracking via GitHub Projects.
+- **Communication:** Telegram for daily syncs; weekly in-person architectural reviews.
+- **Integrity:** Shared ownership of the codebase and peer-reviewed Pull Requests.
 
-## Repository Setup \& Usage (coming soon)
+---
 
-Guidelines and setup instructions (Docker configuration, API documentation, etc.) will be added once service development begins in Phase 1.
-
+<p align="center">
+Distributed Systems Project - Addis Ababa Science and Technology University (AASTU)  
+**Department of Software Engineering**
+</p>
