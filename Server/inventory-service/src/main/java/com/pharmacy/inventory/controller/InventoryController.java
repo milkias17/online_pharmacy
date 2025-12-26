@@ -6,11 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-@CrossOrigin(origins = "http://localhost:3000")
-
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin(origins = "*") 
 @RestController
 @RequestMapping("/inventory/medicines")
 public class InventoryController {
@@ -18,7 +17,7 @@ public class InventoryController {
     @Autowired
     private InventoryService service;
 
-    // 1. UPDATED: GET /inventory/medicines?name=param&pharmacyId=123
+    // 1. GET /inventory/medicines?name=param&pharmacyId=123
     @GetMapping
     public List<Medicine> getMedicines(
             @RequestParam(required = false) String name,
@@ -26,7 +25,7 @@ public class InventoryController {
         return service.getMedicines(name, pharmacyId);
     }
 
-    // 2. NEW: GET /inventory/medicines/{id}
+    // 2. GET /inventory/medicines/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Medicine> getMedicineById(@PathVariable Long id) {
         Optional<Medicine> medicine = service.getMedicineById(id);
@@ -41,7 +40,7 @@ public class InventoryController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    // 4.PATCH /inventory/medicines/{id}/stock?quantity=50&mode=SET
+    // 4. PATCH /inventory/medicines/{id}/stock?quantity=50&mode=SET
     @PatchMapping("/{id}/stock")
     public ResponseEntity<String> updateStock(
             @PathVariable Long id, 
