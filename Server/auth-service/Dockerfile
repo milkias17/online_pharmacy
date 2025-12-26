@@ -25,8 +25,6 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy project code
 COPY . .
 
-# --- NEW STEP: Collect Static Files ---
-# We pass a dummy SECRET_KEY because the real one is in .env (not available during build)
 # WhiteNoise needs these files to be in the /app/staticfiles folder
 RUN SECRET_KEY=dummy-value-for-build python manage.py collectstatic --noinput
 

@@ -19,7 +19,6 @@ spec:
         ports:
         - containerPort: 8080
         env:
-          # Database Connection
           - name: SPRING_DATASOURCE_URL
             value: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require"
           - name: SPRING_DATASOURCE_USERNAME
