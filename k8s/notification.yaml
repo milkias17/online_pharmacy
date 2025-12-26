@@ -19,17 +19,24 @@ spec:
         ports:
         - containerPort: 3000
         env:
-          # Connection string for Prisma
+          # Database Connection (Supabase PostgreSQL)
           - name: DATABASE_URL
             value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+          
+          # Application Settings
           - name: PORT
             value: "3000"
           - name: SERVICE_API_KEY
-            value: "ec3c4c82309659eb8328f84e4cb0c163d4514b1c22eb7a94326e01bd5a545bee"
+            value: "super-secret-notification-token"
+
+          # Redis Message Broker Connection (The "Post Office" Link)
+          # 'redis-service' matches the name in your redis.yaml
           - name: REDIS_URL
-            value: "redis://default:password@redis-service:6379"
-          - name: JWT_SECRET
-            value: "django-insecure-pharmacy-system-key-2024"
+            value: "redis://redis-service:6379"
+          - name: REDIS_HOST
+            value: "redis-service"
+          - name: REDIS_PORT
+            value: "6379"
 ---
 apiVersion: v1
 kind: Service
@@ -40,6 +47,6 @@ spec:
     app: notification
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 3000
+      port: 80         # Internal Cluster Port (Other pods call http://notification-service)
+      targetPort: 3000 # The port the Node.js app is actually listening on
   type: ClusterIP
