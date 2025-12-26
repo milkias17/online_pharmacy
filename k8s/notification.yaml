@@ -19,23 +19,19 @@ spec:
         ports:
         - containerPort: 3000
         env:
+          # --- DATABASE CONNECTION ---
           - name: DATABASE_URL
             value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
           
-          # Application Settings
+          - name: DIRECT_URL
+            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+
           - name: PORT
             value: "3000"
           - name: SERVICE_API_KEY
             value: "super-secret-notification-token"
-
-          # Redis Message Broker Connection (The "Post Office" Link)
-          # 'redis-service' matches the name in your redis.yaml
           - name: REDIS_URL
             value: "redis://redis-service:6379"
-          - name: REDIS_HOST
-            value: "redis-service"
-          - name: REDIS_PORT
-            value: "6379"
 ---
 apiVersion: v1
 kind: Service
@@ -46,6 +42,6 @@ spec:
     app: notification
   ports:
     - protocol: TCP
-      port: 80         # Internal Cluster Port (Other pods call http://notification-service)
-      targetPort: 3000 # The port the Node.js app is actually listening on
+      port: 80
+      targetPort: 3000
   type: ClusterIP
