@@ -1,20 +1,31 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { createAdapter } from '@socket.io/redis-adapter'; // <--- NEW
+import { createClient } from 'redis'; // <--- NEW
 import { logger } from '../config/logger';
 import { JwtPayload } from '../types';
 
 let io: Server;
 
-// Extend Socket interface to include userId
 interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
 
-export const initSocket = (httpServer: HttpServer) => {
+export const initSocket = async (httpServer: HttpServer) => {
   io = new Server(httpServer, {
     cors: { origin: "*" }
   });
+
+  // === 1. SETUP REDIS ADAPTER FOR SCALING ===
+  const pubClient = createClient({ url: process.env.REDIS_URL });
+  const subClient = pubClient.duplicate();
+
+  await Promise.all([pubClient.connect(), subClient.connect()]);
+
+  io.adapter(createAdapter(pubClient, subClient));
+  logger.info("Socket.IO Redis Adapter connected");
+  // ==========================================
 
   // Authentication Middleware
   io.use((socket: AuthenticatedSocket, next) => {
@@ -34,17 +45,14 @@ export const initSocket = (httpServer: HttpServer) => {
   io.on('connection', (socket: AuthenticatedSocket) => {
     if (socket.userId) {
       logger.info(`User connected via Socket: ${socket.userId}`);
-      socket.join(socket.userId); // Join room
+      socket.join(socket.userId); 
     }
-
-    socket.on('disconnect', () => {
-      // Cleanup if needed
-    });
   });
 };
 
 export const emitRealTime = (userId: string, event: string, data: any) => {
   if (io) {
+    // With Redis Adapter, this now works across ALL pods/containers
     io.to(userId).emit(event, data);
     logger.info(`Real-time event '${event}' sent to user ${userId}`);
   }

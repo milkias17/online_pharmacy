@@ -25,7 +25,11 @@ spec:
           - name: PORT
             value: "3000"
           - name: SERVICE_API_KEY
-            value: "super-secret-notification-token"
+            value: "ec3c4c82309659eb8328f84e4cb0c163d4514b1c22eb7a94326e01bd5a545bee"
+          - name: REDIS_URL
+            value: "redis://default:password@redis-service:6379"
+          - name: JWT_SECRET
+            value: "django-insecure-pharmacy-system-key-2024"
 ---
 apiVersion: v1
 kind: Service

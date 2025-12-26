@@ -3,19 +3,21 @@ import { logger } from '../config/logger';
 
 let isInitialized = false;
 
-// Initialize Firebase
-if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+if (process.env.FIREBASE_CREDENTIALS_JSON) {
   try {
+    // Parse the JSON string from Env Variable
+    const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON);
+    
     admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
+      credential: admin.credential.cert(serviceAccount),
     });
     isInitialized = true;
-    logger.info("Firebase Admin Initialized");
+    logger.info("Firebase Admin Initialized via JSON Env Var");
   } catch (error) {
     logger.error("Firebase Init Failed", error);
   }
 } else {
-  logger.warn("Running in MOCK FCM mode (No credentials provided)");
+  logger.warn("Running in MOCK FCM mode");
 }
 
 export const sendPushNotification = async (

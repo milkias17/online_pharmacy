@@ -1,24 +1,27 @@
-import { Queue, Worker, Job } from 'bullmq';
-import IORedis from 'ioredis';
-import { PrismaClient } from '@prisma/client';
-import { sendPushNotification } from './fcmService';
-import { emitRealTime } from './socketService';
-import { logger } from '../config/logger';
-import { NotificationPayload } from '../types';
+import { Queue, Worker, Job } from "bullmq";
+import IORedis from "ioredis";
+import { PrismaClient } from "@prisma/client";
+import { sendPushNotification } from "./fcmService";
+import { emitRealTime } from "./socketService";
+import { logger } from "../config/logger";
+import { NotificationPayload } from "../types";
 
 const prisma = new PrismaClient();
 
-const redisConnection = new IORedis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: Number(process.env.REDIS_PORT) || 6379,
-  maxRetriesPerRequest: null,
-});
+const redisConnection = new IORedis(
+  process.env.REDIS_URL || "redis://localhost:6379",
+  {
+    maxRetriesPerRequest: null,
+  }
+);
 
-const notificationQueue = new Queue('notifications', { connection: redisConnection });
+const notificationQueue = new Queue("notifications", {
+  connection: redisConnection,
+});
 
 // The Worker Processor
 const worker = new Worker<NotificationPayload>(
-  'notifications',
+  "notifications",
   async (job: Job<NotificationPayload>) => {
     const { userId, title, body, type, metadata } = job.data;
     logger.info(`Processing job ${job.id} for User: ${userId}`);
@@ -29,13 +32,13 @@ const worker = new Worker<NotificationPayload>(
         userId,
         title,
         body,
-        type: type || 'info',
+        type: type || "info",
         metadata: metadata || {},
       },
     });
 
     // 2. Real-time Delivery (In-App)
-    emitRealTime(userId, 'notification_received', notification);
+    emitRealTime(userId, "notification_received", notification);
 
     // 3. Push Delivery (FCM)
     const devices = await prisma.deviceToken.findMany({
@@ -43,7 +46,7 @@ const worker = new Worker<NotificationPayload>(
     });
 
     if (devices.length > 0) {
-      const pushPromises = devices.map((device) =>
+      const pushPromises = devices.map((device: { token: string; }) =>
         sendPushNotification(device.token, title, body, metadata)
       );
       await Promise.all(pushPromises);
@@ -52,13 +55,13 @@ const worker = new Worker<NotificationPayload>(
   { connection: redisConnection }
 );
 
-worker.on('failed', (job, err) => {
+worker.on("failed", (job, err) => {
   logger.error(`Job ${job?.id} failed`, err);
 });
 
 export const addNotificationJob = async (payload: NotificationPayload) => {
-  await notificationQueue.add('send_notification', payload, {
+  await notificationQueue.add("send_notification", payload, {
     attempts: 3,
-    backoff: { type: 'exponential', delay: 1000 },
+    backoff: { type: "exponential", delay: 1000 },
   });
 };
