@@ -3,7 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")   
 }
 
 model Notification {
@@ -11,8 +13,8 @@ model Notification {
   userId    String
   title     String
   body      String
-  type      String   @default("info") // e.g., 'order_status', 'stock_alert'
-  metadata  Json?    // Stores orderId, tracking links, etc.
+  type      String   @default("info") 
+  metadata  Json? 
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -22,8 +24,8 @@ model Notification {
 model DeviceToken {
   id        String   @id @default(uuid())
   userId    String
-  token     String   @unique // The FCM Token
-  platform  String   @default("web") // android, ios, web
+  token     String   @unique 
+  platform  String   @default("web") 
   updatedAt DateTime @updatedAt
 
   @@index([userId])
