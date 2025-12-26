@@ -19,6 +19,7 @@ spec:
         ports:
         - containerPort: 8080
         env:
+          # --- DATABASE CONNECTION (Supabase JDBC) ---
           - name: SPRING_DATASOURCE_URL
             value: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require"
           - name: SPRING_DATASOURCE_USERNAME
@@ -28,7 +29,7 @@ spec:
           - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
             value: "org.postgresql.Driver"
 
-          # JPA / Hibernate Settings
+          # --- JPA / HIBERNATE SETTINGS ---
           - name: SPRING_JPA_HIBERNATE_DDL_AUTO
             value: "update"
           - name: SPRING_JPA_SHOW_SQL
@@ -36,11 +37,17 @@ spec:
           - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
             value: "org.hibernate.dialect.PostgreSQLDialect"
 
-          # SSL Configuration for Supabase
+          # --- SSL CONFIGURATION FOR SUPABASE ---
           - name: SPRING_DATASOURCE_HIKARI_DATA_SOURCE_PROPERTIES_SSL
             value: "true"
           - name: SPRING_DATASOURCE_HIKARI_DATA_SOURCE_PROPERTIES_SSLFACTORY
             value: "org.postgresql.ssl.NonValidatingFactory"
+
+          # --- REDIS MESSAGE BROKER CONNECTION ---
+          - name: SPRING_DATA_REDIS_HOST
+            value: "redis-service"
+          - name: SPRING_DATA_REDIS_PORT
+            value: "6379"
 ---
 apiVersion: v1
 kind: Service
@@ -51,6 +58,6 @@ spec:
     app: inventory
   ports:
     - protocol: TCP
-      port: 80       
+      port: 80         
       targetPort: 8080 
   type: ClusterIP

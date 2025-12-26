@@ -19,12 +19,19 @@ spec:
         ports:
         - containerPort: 8000
         env:
+          # Database Connection
           - name: DATABASE_URL
             value: "postgres://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
           - name: SECRET_KEY
             value: "payment-service-secret-key-123"
           - name: DEBUG
-            value: "False"
+            value: "True"
+          
+          # REDIS CONNECTION (Required to publish 'payment.confirmed')
+          - name: REDIS_URL
+            value: "redis://redis-service:6379"
+          - name: REDIS_HOST
+            value: "redis-service"
 ---
 apiVersion: v1
 kind: Service
