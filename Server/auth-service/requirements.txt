@@ -5,6 +5,7 @@ asgiref==3.8.1
 sqlparse==0.5.3
 python-dotenv==1.2.1
 whitenoise==6.8.2
+python-decouple==3.8
 
 # Database
 psycopg2-binary==2.9.10
