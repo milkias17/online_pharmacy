@@ -17,4 +17,5 @@ google-auth
 requests
 dj-database-url
 whitenoise
+django-cors-headers==4.6.0
 
