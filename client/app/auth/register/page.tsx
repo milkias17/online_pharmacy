@@ -3,180 +3,165 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User, Building2, Loader2, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, Loader2, ChevronLeft, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  // Role Selection State ('customer' or 'pharmacy')
-  const [role, setRole] = useState<'customer' | 'pharmacy'>('customer');
-
-  // Form State
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    pharmacyName: '' // Only for pharmacy role
+    role: 'user' 
   });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
 
     setIsLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: 'user'
+        }),
+      });
 
-    // SIMULATE API CALL
-    setTimeout(() => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Registration failed");
+
+      toast.success("Account created! Redirecting to login...");
+      setTimeout(() => router.push('/auth/login'), 2000);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
       setIsLoading(false);
-      toast.success("Account created successfully!");
-      // Redirect to login after registration
-      setTimeout(() => router.push('/auth/login'), 1000);
-    }, 2000);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex bg-white font-sans">
       <Toaster position="top-center" />
       
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="mt-2 text-gray-500">Join Medivo today</p>
+      {/* Left Side - Visuals (Identical to Login for consistency) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-90"></div>
+        <div className="relative z-10 p-12 text-white max-w-lg text-left">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-xl">💊</div>
+          <h2 className="text-6xl font-black mb-6 tracking-tighter italic leading-none">Medivo</h2>
+          <p className="text-xl text-blue-50 leading-relaxed font-medium">
+            Access verified inventory and manage your health instantly.
+          </p>
         </div>
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      </div>
 
-        {/* ROLE TOGGLE SWITCH */}
-        <div className="bg-gray-100 p-1 rounded-xl flex relative">
-          <button
-            onClick={() => setRole('customer')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 ${
-              role === 'customer' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <User size={18} /> Customer
-          </button>
-          <button
-            onClick={() => setRole('pharmacy')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 ${
-              role === 'pharmacy' 
-                ? 'bg-white text-accent shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Building2 size={18} /> Pharmacy
-          </button>
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-16">
+        <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-[10px] tracking-widest">
+          <ChevronLeft size={16} /> Back to home
+        </Link>
+
+        <div className="w-full max-w-md mx-auto my-auto">
+          <div className="mb-10">
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Create Account</h1>
+            <p className="text-gray-500 font-medium">Register as a patient to start ordering.</p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Display Name</label>
+              <div className="relative">
+                <User className="absolute left-4 top-4 h-5 w-5 text-gray-300" />
+                <input 
+                  type="text" 
+                  required
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                  placeholder="Full Name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-4 h-5 w-5 text-gray-300" />
+                <input 
+                  type="email" 
+                  required
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? 'text' : 'password'} 
+                      required
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                      placeholder="••••••"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-4 text-gray-300 hover:text-accent"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+               </div>
+               <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Confirm</label>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    required
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                    placeholder="••••••"
+                  />
+                   <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-4 text-gray-300 hover:text-accent"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+               </div>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-accent text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-accentHover transition shadow-2xl shadow-accent/20 flex items-center justify-center gap-3 disabled:opacity-70 mt-6"
+            >
+              {isLoading ? <Loader2 className="animate-spin" /> : <>Create Account <ArrowRight size={18} /></>}
+            </button>
+          </form>
+
+          <p className="mt-10 text-center text-gray-500 font-medium">
+            Already registered?{' '}
+            <Link href="/auth/login" className="text-accent font-black hover:underline">Sign In</Link>
+          </p>
         </div>
-
-        <form className="mt-8 space-y-5" onSubmit={handleRegister}>
-          
-          {/* Conditional Input: Pharmacy Name */}
-          {role === 'pharmacy' && (
-            <div className="animate-fade-in">
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pharmacy Name</label>
-              <div className="relative">
-                <Building2 className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-                <input
-                  name="pharmacyName"
-                  type="text"
-                  required
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                  placeholder="e.g. AASTU Clinic Pharmacy"
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          )}
-
-          <div>
-             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{role === 'pharmacy' ? 'Owner Full Name' : 'Full Name'}</label>
-            <div className="relative">
-              <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-              <input
-                name="name"
-                type="text"
-                required
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                placeholder="John Doe"
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-              <input
-                name="email"
-                type="email"
-                required
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                placeholder="you@example.com"
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                  placeholder="••••••"
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Confirm</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-                <input
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                  placeholder="••••••"
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition flex items-center justify-center gap-2
-              ${role === 'pharmacy' ? 'bg-accent hover:bg-accentHover' : 'bg-gray-900 hover:bg-black'}
-            `}
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : <>Create Account <CheckCircle2 size={20} /></>}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-600">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="font-bold text-accent hover:text-accentHover">
-            Sign In
-          </Link>
-        </p>
       </div>
     </div>
   );

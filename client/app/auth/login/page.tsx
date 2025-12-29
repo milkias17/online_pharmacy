@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login); // From your Zustand store
+  const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  // Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -20,125 +20,119 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // SIMULATE API CALL
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // MOCK LOGIC: Check if it's a pharmacist or user based on email text
-      // In real life, the backend tells you the role.
-      if (email.includes('pharma')) {
-        // Log in as Pharmacist
-        login(
-            { id: 'u2', name: 'Dr. John Doe', email, role: 'pharmacy' }, 
-            'fake-jwt-token'
-        );
-        toast.success('Welcome back, Doc!');
-        // For Phase 1, we might not have a pharmacy dashboard yet, 
-        // but we can route them to inventory or back home for now.
-        router.push('/pharmacy/orders'); 
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Unauthorized access");
+
+      login({ 
+        id: data.userId, 
+        email: email, 
+        role: data.role, // 'admin', 'pharmacy_admin', or 'user'
+        name: data.username || email.split('@')[0] 
+      }, data.access);
+
+      toast.success('Welcome back!');
+
+      // ROLE-BASED REDIRECTION
+      if (data.role === 'admin') {
+        router.push('/admin/dashboard'); // Platform Owner
+      } else if (data.role === 'pharmacy_admin' || data.role === 'pharmacy') {
+        router.push('/pharmacy/orders'); // Pharmacy Manager
       } else {
-        // Log in as Customer
-        login(
-            { id: 'u1', name: 'Miheret Girmachew', email, role: 'customer' }, 
-            'fake-jwt-token'
-        );
-        toast.success('Login Successful!');
-        router.push('/customer/browse');
+        router.push('/customer/browse'); // Regular Patient
       }
-    }, 1500);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex bg-surface">
+    <div className="min-h-screen flex bg-white font-sans">
       <Toaster position="top-center" />
       
-      {/* Left Side - Visuals (Hidden on mobile) */}
+      {/* Left Side (Visuals) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-accent to-blue-600 opacity-90"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-90"></div>
         <div className="relative z-10 p-12 text-white">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6">
-            💊
-          </div>
-          <h2 className="text-5xl font-bold mb-6">Manage your health securely.</h2>
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6">💊</div>
+          <h2 className="text-5xl font-bold mb-6 italic tracking-tight">Medivo</h2>
           <p className="text-xl text-blue-100 max-w-md">
-            Whether you are ordering prescriptions or managing pharmacy inventory, Medivo  connects you instantly.
+            Connecting patients to pharmacies in real-time.
           </p>
         </div>
-        {/* Decorative Circles */}
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-12 right-12 w-32 h-32 bg-accent/30 rounded-full blur-2xl"></div>
       </div>
 
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-500 mt-2">Please enter your details to sign in.</p>
+      {/* Right Side (Form) */}
+      <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-16">
+        <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-xs tracking-widest">
+          <ChevronLeft size={16} /> Back to home
+        </Link>
+
+        <div className="w-full max-w-md mx-auto my-auto">
+          <div className="mb-10 text-center lg:text-left">
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Sign In</h1>
+            <p className="text-gray-500 font-medium">Enter your credentials to access the ecosystem.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email Input */}
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Identifier</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-4 top-4 h-5 w-5 text-gray-300" />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition bg-gray-50 focus:bg-white"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                  placeholder="admin@medivo.com"
                   required
                 />
               </div>
             </div>
 
-            {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Secret Key</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-4 top-4 h-5 w-5 text-gray-300" />
                 <input 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-12 pr-12 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition bg-gray-50 focus:bg-white"
                   required
                 />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-4 text-gray-400 hover:text-accent"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-accent focus:ring-accent" />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
-              </label>
-              <a href="#" className="text-sm font-medium text-accent hover:text-accentHover">Forgot password?</a>
             </div>
 
             <button 
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-black transition shadow-lg shadow-gray-200 flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full bg-gray-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-black transition shadow-2xl shadow-gray-200 flex items-center justify-center gap-3 disabled:opacity-70"
             >
-              {isLoading ? <Loader2 className="animate-spin" /> : <>Sign In <ArrowRight size={20} /></>}
+              {isLoading ? <Loader2 className="animate-spin" /> : <>Authorize <ArrowRight size={18} /></>}
             </button>
           </form>
 
-          <p className="mt-8 text-center text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/auth/register" className="font-bold text-accent hover:text-accentHover">
-              Create free account
-            </Link>
+          <p className="mt-10 text-center text-gray-500 font-medium">
+            New patient?{' '}
+            <Link href="/auth/register" className="text-accent font-black hover:underline">Register here</Link>
           </p>
-          
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg text-sm text-blue-800 border border-blue-100">
-            <strong>Tip for Demo:</strong> <br/>
-            Use <b>'user@gmail.com'</b> for Customer view.<br/>
-            Use <b>'pharma@aastu.et'</b> for Pharmacist view.
-          </div>
         </div>
       </div>
     </div>
