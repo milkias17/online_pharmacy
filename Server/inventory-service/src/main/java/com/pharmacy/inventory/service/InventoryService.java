@@ -79,6 +79,9 @@ public class InventoryService {
         if (newStock < 5) {
             System.out.println("EVENT: inventory.low_stock | ID: " + medicineId);
         }
+
+        String jsonMessage = "{\"type\":\"STOCK_LOW\", \"data\": {...}}";
+        redisTemplate.convertAndSend("global_events", jsonMessage);
     }
 
     // 5. Batch Get
