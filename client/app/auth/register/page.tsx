@@ -21,6 +21,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!");
       return;
@@ -28,11 +29,14 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
+      // Logic: Sanitize the username (Replace spaces with _ and make lowercase)
+      const sanitizedUsername = formData.username.trim().replace(/\s+/g, '_').toLowerCase();
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: formData.username,
+          username: sanitizedUsername, // Use the sanitized version
           email: formData.email,
           password: formData.password,
           role: 'user'
@@ -40,7 +44,12 @@ export default function RegisterPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Registration failed");
+
+      if (!res.ok) {
+        // Show specific error if username is still invalid
+        if (data.username) throw new Error("Name can only contain letters, numbers, and underscores.");
+        throw new Error(data.detail || "Registration failed");
+      }
 
       toast.success("Account created! Redirecting to login...");
       setTimeout(() => router.push('/auth/login'), 2000);
@@ -50,19 +59,18 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex bg-white font-sans">
       <Toaster position="top-center" />
       
-      {/* Left Side - Visuals (Identical to Login for consistency) */}
+      {/* Left Side - Visuals (Consistent with Login) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-90"></div>
         <div className="relative z-10 p-12 text-white max-w-lg text-left">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-xl">💊</div>
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-xl border border-white/20">💊</div>
           <h2 className="text-6xl font-black mb-6 tracking-tighter italic leading-none">Medivo</h2>
           <p className="text-xl text-blue-50 leading-relaxed font-medium">
-            Access verified inventory and manage your health instantly.
+            Join the distributed network. Access verified inventory and manage your health instantly.
           </p>
         </div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
@@ -70,7 +78,7 @@ export default function RegisterPage() {
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-16">
-        <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-[10px] tracking-widest">
+        <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-[10px] tracking-[0.2em]">
           <ChevronLeft size={16} /> Back to home
         </Link>
 
@@ -82,7 +90,7 @@ export default function RegisterPage() {
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Display Name</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Full Name</label>
               <div className="relative">
                 <User className="absolute left-4 top-4 h-5 w-5 text-gray-300" />
                 <input 
@@ -90,7 +98,7 @@ export default function RegisterPage() {
                   required
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
                   className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
-                  placeholder="Full Name"
+                  placeholder="e.g. Abebe Kebede"
                 />
               </div>
             </div>
@@ -131,20 +139,15 @@ export default function RegisterPage() {
                </div>
                <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Confirm</label>
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    required
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
-                    placeholder="••••••"
-                  />
-                   <button 
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-4 text-gray-300 hover:text-accent"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? 'text' : 'password'} 
+                      required
+                      onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
+                      placeholder="••••••"
+                    />
+                  </div>
                </div>
             </div>
 
