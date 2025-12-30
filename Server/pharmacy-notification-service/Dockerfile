@@ -43,4 +43,5 @@ EXPOSE 3000
 # The startup command: 
 # 1. Synchronize the database schema with the DB
 # 2. Start the compiled node application
-CMD ["sh", "-c", "npx prisma db push --schema=./src/prisma/schema.prisma && node dist/index.js"]
+
+CMD ["node", "dist/index.js"]
