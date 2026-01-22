@@ -21,10 +21,10 @@ spec:
         env:
           # --- DATABASE CONNECTION ---
           - name: DATABASE_URL
-            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
-          
+            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
+
           - name: DIRECT_URL
-            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
 
           - name: PORT
             value: "3000"
