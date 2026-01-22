@@ -14,28 +14,30 @@ spec:
     spec:
       containers:
       - name: payment
-        # UPDATED TO V2 to ensure the new kafka_consumer.py script is present
         image: miheret217/payment-service:v2 
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
         env:
+          # --- CHAPA CREDENTIALS (THE 401 FIX) ---
+          - name: CHAPA_SECRET_KEY
+            value: "CHASECK_TEST-OnIpBYA3c0Xh3sLxxmv9DhEvAbjvOadq"
+          - name: CHAPA_WEBHOOK_SECRET
+            value: "MySuperSecretHash123!"
+
           # --- DATABASE CONNECTION (Supabase) ---
           - name: DATABASE_URL
             value: "postgres://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
           
-          # --- KAFKA CONFIGURATION (The Asynchronous Bus) ---
-          # This is required for the kafka_consumer.py worker to function
+          # --- KAFKA & REDIS ---
           - name: KAFKA_BOOTSTRAP_SERVERS
             value: "kafka-service:9092"
-
-          # --- REDIS CONNECTION ---
           - name: REDIS_URL
             value: "redis://redis-service:6379"
           - name: REDIS_HOST
             value: "redis-service"
 
-          # --- DJANGO SETTINGS ---
+          # --- DJANGO ---
           - name: SECRET_KEY
             value: "payment-service-secret-key-123"
           - name: DEBUG
