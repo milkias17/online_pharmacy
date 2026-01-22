@@ -3,38 +3,48 @@ kind: Ingress
 metadata:
   name: medivo-gateway
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # THE CRITICAL FIX: This passes the second part of the path to the backend
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
-  ingressClassName: nginx 
+  ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /auth/(.*)
+      # Pattern: /service-name(/|$)(.*)
+      # $1 is the first bracket, $2 is the second bracket (the sub-path)
+      - path: /auth(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: auth-service
             port:
               number: 80
-      - path: /inventory/(.*)
+      - path: /inventory(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: inventory-service
             port:
               number: 80
-      - path: /order/(.*)
+      - path: /order(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: order-service
             port:
               number: 80
-      - path: /payment/(.*)
+      - path: /payment(/|$)(.*)
         pathType: Prefix
         backend:
           service:
             name: payment-service
+            port:
+              number: 80
+      - path: /notification(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
             port:
               number: 80
