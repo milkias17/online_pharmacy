@@ -3,46 +3,65 @@ kind: Ingress
 metadata:
   name: medivo-gateway
   annotations:
-    # Tell Nginx to treat paths as Regular Expressions
+    # 1. Handle Paths using Regex
     nginx.ingress.kubernetes.io/use-regex: "true"
-    # Capture the (.*) part and send it to the service
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    
+    # 2. Rewrite Logic: 
+    # Capture group 2 (.*) and pass it to the service.
+    # This strips the prefix defined in the rules below.
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    
+    # 3. GLOBAL CORS FIX
+    # This forces the Gateway to allow your localhost frontend to talk to it.
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:3000"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE, PATCH"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,x-user-id"
+
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      # Changed pathType to ImplementationSpecific to allow regex
-      - path: /auth/(.*)
+      # AUTH SERVICE
+      # Matches /auth OR /auth/something
+      - path: /auth(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: auth-service
             port:
               number: 80
-      - path: /inventory/(.*)
+              
+      # INVENTORY SERVICE
+      - path: /inventory(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: inventory-service
             port:
               number: 80
-      - path: /order/(.*)
+              
+      # ORDER SERVICE
+      - path: /order(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: order-service
             port:
               number: 80
-      - path: /payment/(.*)
+              
+      # PAYMENT SERVICE
+      - path: /payment(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: payment-service
             port:
               number: 80
-      - path: /notification/(.*)
+              
+      # NOTIFICATION SERVICE
+      - path: /notification(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
