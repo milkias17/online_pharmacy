@@ -21,7 +21,7 @@ spec:
         env:
           # --- DATABASE CONNECTION (Supabase JDBC) ---
           - name: SPRING_DATASOURCE_URL
-            value: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require"
+            value: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
           - name: SPRING_DATASOURCE_USERNAME
             value: "postgres.ekdjzirbeiakbqpcjhnb"
           - name: SPRING_DATASOURCE_PASSWORD
@@ -48,6 +48,15 @@ spec:
             value: "redis-service"
           - name: SPRING_DATA_REDIS_PORT
             value: "6379"
+
+          # --- KAFKA MESSAGE BUS CONNECTION (The Final Fix) ---
+          # This tells Spring Boot where to find the Kafka Broker
+          - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            value: "kafka-service:9092"
+          - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+            value: "inventory-group"
+          - name: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
+            value: "earliest"
 ---
 apiVersion: v1
 kind: Service
