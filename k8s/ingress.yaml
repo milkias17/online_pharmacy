@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: medivo-gateway
   annotations:
-    # THE CRITICAL FIX: This passes the second part of the path to the backend
+    # This logic says: "Take whatever is in the SECOND brackets and send it to the pod"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
@@ -11,8 +11,8 @@ spec:
   rules:
   - http:
       paths:
-      # Pattern: /service-name(/|$)(.*)
-      # $1 is the first bracket, $2 is the second bracket (the sub-path)
+      # Pattern: /prefix(/|$)(.*) 
+      # $1 = the slash or empty, $2 = the actual API path
       - path: /auth(/|$)(.*)
         pathType: Prefix
         backend:
