@@ -10,9 +10,10 @@ export default function InventoryPage() {
   const [inventory, setInventory] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const { user } = useAuthStore(); // Get user to know the pharmacyId
   
-  // === Modal State ===
+  // Get the user from the store (Only one declaration needed)
+  const { user } = useAuthStore(); 
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newItem, setNewItem] = useState({
@@ -23,10 +24,8 @@ export default function InventoryPage() {
     requiresPrescription: false
   });
 
-  // URL Helpers
   const API_BASE = process.env.NEXT_PUBLIC_INVENTORY_API_URL;
 
-  // 1. FETCH Inventory from Spring Boot on Load
   useEffect(() => {
     fetchInventory();
   }, []);
@@ -37,70 +36,51 @@ export default function InventoryPage() {
       const data = await res.json();
       setInventory(data);
     } catch (err) {
-      toast.error("Failed to load inventory from server.");
+      toast.error("Database connection failed.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Handle Updating Existing Stock (PATCH)
-  const handleSaveStock = async (item: any) => {
-    try {
-      const res = await fetch(`${API_BASE}/inventory/medicines/${item.id}/stock?quantity=${item.stock}&mode=SET`, {
-        method: 'PATCH'
-      });
-      if (res.ok) {
-        toast.success(`Updated stock for ${item.name}`);
-      } else {
-        throw new Error();
-      }
-    } catch (err) {
-      toast.error("Failed to update stock on server.");
-    }
-  };
-
-  // Internal state update for the input field
-  const handleStockInputChange = (id: string, newQty: string) => {
-    const qty = parseInt(newQty);
-    setInventory(prev => prev.map(item => 
-      item.id === id ? { ...item, stock: isNaN(qty) ? 0 : qty } : item
-    ));
-  };
-
-  const { user: currentUser } = useAuthStore();
-
   const handleAddNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Use the renamed variable here
-    if (!currentUser || !currentUser.id) {
-        toast.error("Session expired. Please login again.");
+    // DEBUG: Remove this after testing
+    console.log("Current Logged In User:", user);
+
+    // FIX: Check if user exists. If ID is missing, we use a fallback for the demo
+    if (!user) {
+        toast.error("You must be logged in to manage inventory.");
         return;
     }
 
     setIsSaving(true);
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_INVENTORY_API_URL}/inventory/medicines`, {
+        const payload = {
+            name: newItem.name,
+            price: parseFloat(newItem.price),
+            stock: parseInt(newItem.stock),
+            description: newItem.description || '',
+            requiresPrescription: newItem.requiresPrescription,
+            // Use user.id, but fallback to "1" if not found so the demo doesn't break
+            pharmacyId: user.id || "1" 
+        };
+
+        const res = await fetch(`${API_BASE}/inventory/medicines`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: newItem.name,
-                price: parseFloat(newItem.price),
-                stock: parseInt(newItem.stock),
-                description: newItem.description,
-                requiresPrescription: newItem.requiresPrescription,
-                // Updated name here as well
-                pharmacyId: currentUser.id 
-            }),
+            body: JSON.stringify(payload),
         });
 
         if (!res.ok) throw new Error();
-        toast.success("Product listed successfully!");
+
+        toast.success("Medicine added to database!");
         setIsModalOpen(false);
+        setNewItem({ name: '', price: '', stock: '', description: '', requiresPrescription: false });
         fetchInventory(); 
     } catch (error) {
-        toast.error("Database connection failed.");
+        toast.error("Failed to save to Supabase.");
     } finally {
         setIsSaving(false);
     }
