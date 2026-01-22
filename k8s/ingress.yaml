@@ -3,48 +3,39 @@ kind: Ingress
 metadata:
   name: medivo-gateway
   annotations:
-    # This logic says: "Take whatever is in the SECOND brackets and send it to the pod"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # This captures everything in the (.*) and passes it to the backend
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      # Pattern: /prefix(/|$)(.*) 
-      # $1 = the slash or empty, $2 = the actual API path
-      - path: /auth(/|$)(.*)
+      # Pattern: /service-name/(.*) maps to $1
+      - path: /auth/(.*)
         pathType: Prefix
         backend:
           service:
             name: auth-service
             port:
               number: 80
-      - path: /inventory(/|$)(.*)
+      - path: /inventory/(.*)
         pathType: Prefix
         backend:
           service:
             name: inventory-service
             port:
               number: 80
-      - path: /order(/|$)(.*)
+      - path: /order/(.*)
         pathType: Prefix
         backend:
           service:
             name: order-service
             port:
               number: 80
-      - path: /payment(/|$)(.*)
+      - path: /payment/(.*)
         pathType: Prefix
         backend:
           service:
             name: payment-service
-            port:
-              number: 80
-      - path: /notification(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: notification-service
-            port:
-              number: 80
+            port
