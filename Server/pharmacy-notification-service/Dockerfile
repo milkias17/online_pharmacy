@@ -4,44 +4,43 @@ WORKDIR /app
 
 # Install build dependencies
 COPY package*.json ./
-# Note: We copy the prisma folder early to cache the prisma generation
+# Copy the prisma schema early to leverage Docker cache
 COPY src/prisma ./src/prisma/
 
 RUN npm install
 
-# Copy the rest of the source code
+# Copy source code and compile
 COPY . .
-
-# Generate Prisma Client (crucial for the build step)
 RUN npx prisma generate --schema=./src/prisma/schema.prisma
-
-# Compile TypeScript to JavaScript
 RUN npm run build
 
 # Stage 2: Runtime
 FROM node:18-alpine
 WORKDIR /app
 
-# IMPORTANT: Prisma on Alpine needs openssl and libc6-compat
+# 1. IMPORTANT: Install libraries Prisma needs to run on Alpine
 RUN apk add --no-cache openssl libc6-compat
 
-# Copy only the package files and install production-only dependencies
+# 2. Copy dependency files
 COPY package*.json ./
+
+# 3. Copy the prisma folder (REQUIRED to generate the client in the final stage)
+COPY src/prisma ./src/prisma/
+
+# 4. Install only production dependencies to keep the image small
 RUN npm install --only=production
 
-# Copy the compiled JS from the builder stage
+# 5. CRITICAL FIX: Re-generate the Prisma Client for the runtime environment
+# This solves the "PrismaClient did not initialize yet" error
+RUN npx prisma generate --schema=./src/prisma/schema.prisma
+
+# 6. Copy the compiled JavaScript from the builder stage
 COPY --from=builder /app/dist ./dist
-# Copy the prisma folder so we can run migrations/push at runtime
-COPY --from=builder /app/src/prisma ./src/prisma
 
-# Set environment to production
+# Environmental Settings
 ENV NODE_ENV=production
-
-# Expose the service port
 EXPOSE 3000
 
-# The startup command: 
-# 1. Synchronize the database schema with the DB
-# 2. Start the compiled node application
-
+# Final Command: Start the Node.js application
+# Note: We removed 'prisma db push' to protect the shared database
 CMD ["node", "dist/index.js"]
