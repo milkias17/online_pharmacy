@@ -106,11 +106,21 @@ public class InventoryService {
     public void handleOrderCreated(String message) {
         try {
             JsonNode json = objectMapper.readTree(message);
-            Long medicineId = json.get("medicine_id").asLong();
-            int requestedQty = json.get("quantity").asInt();
-            String orderId = json.get("order_id").asText();
+            
+            // ROBUST CHECK: Look for medicine_id OR medicineId
+            JsonNode idNode = json.has("medicine_id") ? json.get("medicine_id") : json.get("medicineId");
+            JsonNode qtyNode = json.has("quantity") ? json.get("quantity") : json.get("qty");
 
-            System.out.println("📦 Kafka: Received Order " + orderId + ". Checking stock...");
+            if (idNode == null || qtyNode == null) {
+                System.err.println("⚠️ Kafka: Received invalid JSON structure. Missing ID or Qty.");
+                return;
+            }
+
+            Long medicineId = idNode.asLong();
+            int requestedQty = qtyNode.asInt();
+            String orderId = json.has("order_id") ? json.get("order_id").asText() : "unknown";
+
+            System.out.println("📦 Kafka: Processing Order " + orderId + " for Medicine ID: " + medicineId);
 
             Optional<Medicine> medicine = repository.findById(medicineId);
 
