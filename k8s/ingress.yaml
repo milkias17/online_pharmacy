@@ -3,51 +3,42 @@ kind: Ingress
 metadata:
   name: medivo-gateway
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/limit-rps: "20"
 spec:
+  ingressClassName: nginx 
   rules:
   - http:
       paths:
-      # 1. AUTH SERVICE
-      - path: /auth/?(.*)
+      - path: /auth
         pathType: Prefix
         backend:
           service:
             name: auth-service
             port:
               number: 80
-
-      # 2. INVENTORY SERVICE
-      - path: /inventory/?(.*)
+      - path: /inventory
         pathType: Prefix
         backend:
           service:
             name: inventory-service
             port:
               number: 80
-
-      # 3. ORDER SERVICE
-      - path: /order/?(.*)
+      - path: /order
         pathType: Prefix
         backend:
           service:
             name: order-service
             port:
               number: 80
-
-      # 4. PAYMENT SERVICE
-      - path: /payment/?(.*)
+      - path: /payment
         pathType: Prefix
         backend:
           service:
             name: payment-service
             port:
               number: 80
-
-      # 5. NOTIFICATION SERVICE
-      - path: /notification/?(.*)
+      - path: /notification
         pathType: Prefix
         backend:
           service:
