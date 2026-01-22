@@ -14,24 +14,29 @@ spec:
     spec:
       containers:
       - name: notification
-        image: miheret217/notification-service:v3
+        # BUMP TO V4 TO FORCE REFRESH
+        image: miheret217/notification-service:v4 
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:
+          # --- DISTRIBUTED INFRASTRUCTURE ---
+          - name: KAFKA_BROKER
+            value: "kafka-service:9092"
+          - name: REDIS_URL
+            value: "redis://redis-service:6379"
+
           # --- DATABASE CONNECTION ---
           - name: DATABASE_URL
-            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
-
+            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
           - name: DIRECT_URL
-            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:6543/postgres"
+            value: "postgresql://postgres.ekdjzirbeiakbqpcjhnb:RMfLaxJEkR9kgUYc@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
 
+          # --- APP SETTINGS ---
           - name: PORT
             value: "3000"
           - name: SERVICE_API_KEY
             value: "super-secret-notification-token"
-          - name: REDIS_URL
-            value: "redis://redis-service:6379"
 ---
 apiVersion: v1
 kind: Service
