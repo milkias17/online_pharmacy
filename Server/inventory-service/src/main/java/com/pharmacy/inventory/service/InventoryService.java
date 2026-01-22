@@ -7,11 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate; // REQUIRED FOR REDIS
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class InventoryService {
@@ -21,6 +24,10 @@ public class InventoryService {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
+
+    // --- REDIS CONFIGURATION ---
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -42,12 +49,17 @@ public class InventoryService {
         return repository.findById(id);
     }
 
-    // 3. Existing Method: Add New
+    // 3. ADDED: Method for Batch API (Fixes Controller Error)
+    public List<Medicine> getMedicinesByIdList(List<Long> ids) {
+        return repository.findAllById(ids);
+    }
+
+    // 4. Existing Method: Add New
     public Medicine addMedicine(Medicine medicine) {
         return repository.save(medicine);
     }
 
-    // 4. Robust Stock Update logic
+    // 5. Robust Stock Update logic
     @Transactional
     public void updateStock(Long medicineId, int quantity, String mode) {
         Medicine medicine = repository.findById(medicineId)
@@ -68,15 +80,24 @@ public class InventoryService {
         medicine.setStock(newStock);
         repository.save(medicine);
         
+        // --- REDIS EVENT: LOW STOCK ALERT ---
         if (newStock < 5) {
-            System.out.println("ALERT: Stock for " + medicine.getName() + " is critical: " + newStock);
+            try {
+                Map<String, String> alertData = new HashMap<>();
+                alertData.put("type", "STOCK_LOW");
+                alertData.put("medicineName", medicine.getName());
+                alertData.put("stock", String.valueOf(newStock));
+                
+                String jsonMessage = objectMapper.writeValueAsString(alertData);
+                redisTemplate.convertAndSend("global_events", jsonMessage);
+                System.out.println("📡 Redis: Published Low Stock alert for " + medicine.getName());
+            } catch (Exception e) {
+                System.err.println("❌ Redis Publish Error: " + e.getMessage());
+            }
         }
-
-        String jsonMessage = "{\"type\":\"STOCK_LOW\", \"data\": {...}}";
-        redisTemplate.convertAndSend("global_events", jsonMessage);
     }
 
-    // --- KAFKA DISTRIBUTED LOGIC ---
+    // --- KAFKA DISTRIBUTED LOGIC (SAGA PATTERN) ---
 
     /**
      * SAGA STEP 1: Listen for Order Creation to RESERVE stock.
@@ -85,7 +106,7 @@ public class InventoryService {
     public void handleOrderCreated(String message) {
         try {
             JsonNode json = objectMapper.readTree(message);
-            Long medicineId = json.get("medicineId").asLong();
+            Long medicineId = json.get("medicine_id").asLong();
             int requestedQty = json.get("quantity").asInt();
             String orderId = json.get("order_id").asText();
 
@@ -94,8 +115,6 @@ public class InventoryService {
             Optional<Medicine> medicine = repository.findById(medicineId);
 
             if (medicine.isPresent() && medicine.get().getStock() >= requestedQty) {
-                // Logic: In a real Saga, we might "Soft Lock" here.
-                // For the demo, we send a success event.
                 String response = "{\"event\": \"STOCK_RESERVED\", \"order_id\": \"" + orderId + "\"}";
                 kafkaTemplate.send("inventory_events", response);
                 System.out.println("✅ Kafka: Stock reserved for " + orderId);
@@ -105,7 +124,7 @@ public class InventoryService {
                 System.out.println("❌ Kafka: Out of stock for " + orderId);
             }
         } catch (Exception e) {
-            System.err.println("❌ Kafka Error: " + e.getMessage());
+            System.err.println("❌ Kafka Consumption Error: " + e.getMessage());
         }
     }
 
@@ -117,7 +136,7 @@ public class InventoryService {
         try {
             JsonNode json = objectMapper.readTree(message);
             if ("PAYMENT_SUCCESS".equals(json.get("event").asText())) {
-                Long medicineId = json.get("medicineId").asLong();
+                Long medicineId = json.get("medicine_id").asLong();
                 int qty = json.get("quantity").asInt();
                 
                 // Perform the hard deduction in the DB
@@ -125,7 +144,7 @@ public class InventoryService {
                 System.out.println("💰 Kafka: Payment confirmed. Inventory updated permanently.");
             }
         } catch (Exception e) {
-            System.err.println("❌ Kafka Error: " + e.getMessage());
+            System.err.println("❌ Kafka Payment Process Error: " + e.getMessage());
         }
     }
 }
