@@ -71,6 +71,9 @@ public class InventoryService {
         if (newStock < 5) {
             System.out.println("ALERT: Stock for " + medicine.getName() + " is critical: " + newStock);
         }
+
+        String jsonMessage = "{\"type\":\"STOCK_LOW\", \"data\": {...}}";
+        redisTemplate.convertAndSend("global_events", jsonMessage);
     }
 
     // --- KAFKA DISTRIBUTED LOGIC ---

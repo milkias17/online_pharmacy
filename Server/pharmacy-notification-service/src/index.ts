@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import { initEventBus } from './services/eventBus';
 
 import express from 'express';
 import http from 'http';
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // Initialize Socket.IO
 initSocket(server);
+initEventBus();
 
 // --- ROUTES ---
 
