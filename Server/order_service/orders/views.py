@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Order
 from .serializers import OrderSerializer
-from .messaging import publish_order_created # <--- IMPORT THE PRODUCER
+from .messaging import publish_order_created 
 
 class CreateOrderView(APIView):
     def post(self, request):

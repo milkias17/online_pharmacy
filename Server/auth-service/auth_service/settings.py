@@ -8,26 +8,15 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
-import dj_database_url  # <--- CRITICAL FIX: This import was missing
+import dj_database_url 
 
-load_dotenv()  # Install python-dotenv if needed: pip install python-dotenv
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+load_dotenv()  
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# We look for 'SECRET_KEY' to match Render and Dockerfile
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-in-prod')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# This ensures it is False on Render, but True on your local machine if not set
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Allow all hosts on Render (or specify your render domain)
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 CORS_ALLOWED_ORIGINS = [
@@ -37,7 +26,6 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_ALL_ORIGINS = True 
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -56,11 +44,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # 1. MUST BE FIRST
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware', # 2. CommonMiddleware goes here (only once!)
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -101,19 +89,17 @@ SIMPLE_JWT = {
 WSGI_APPLICATION = 'auth_service.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3', # Fallback for local dev
+        default='sqlite:///db.sqlite3', 
         conn_max_age=600
     )
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -132,8 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'authentication.User'
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
+
 
 LANGUAGE_CODE = 'en-us'
 
@@ -144,16 +129,12 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-# Changed to 'staticfiles' which is standard for WhiteNoise/Render
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
-# Email Configuration
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     DEFAULT_FROM_EMAIL = 'no-reply@pharmacy.et'
@@ -162,7 +143,6 @@ else:
     EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-    # Fixed: Updated to match the Render Environment Variable name
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     EMAIL_USE_TLS = True
     DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')

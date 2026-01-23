@@ -5,10 +5,10 @@ from .views import RegisterView, MyTokenObtainPairView, LogoutView, ProfileView,
 app_name = 'authentication'
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
-    path('login/', MyTokenObtainPairView.as_view(), name='login'),  # Returns access/refresh
+    path('login/', MyTokenObtainPairView.as_view(), name='login'), 
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('logout/', LogoutView.as_view(), name='logout'),  # Optional
-    path('me/', ProfileView.as_view(), name='profile'),  # Get/update profile
+    path('logout/', LogoutView.as_view(), name='logout'),  
+    path('me/', ProfileView.as_view(), name='profile'),  
     path('forgot-password/', forgot_password, name='forgot_password'),
     path('reset-password/', reset_password, name='reset_password'),
     path('verify-email/', verify_email_request, name='verify_email'),
