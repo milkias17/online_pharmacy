@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: notification
-        image: miheret217/notification-service:v4 
+        image: miheret217/notification-service:v7
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
