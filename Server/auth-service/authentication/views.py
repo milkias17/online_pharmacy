@@ -39,7 +39,7 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
         return Response({
-            'token': str(refresh.access_token),  # Or include both access/refresh if needed
+            'token': str(refresh.access_token), 
             'userId': str(user.id),
             'role': user.role,
         }, status=status.HTTP_201_CREATED)
@@ -62,7 +62,6 @@ class LogoutView(views.APIView):
         try:
             refresh_token = request.data["refresh"]
             token = UntypedToken(refresh_token)
-            # Blacklist the token if using blacklisting (requires settings config)
             RefreshToken(refresh_token).blacklist()
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
         except TokenError:
@@ -162,7 +161,7 @@ def verify_otp(request):
     try:
         otp = EmailVerificationOTP.objects.get(user=request.user, code=code)
         if otp.is_valid():
-            request.user.is_verified = True  # Add is_verified field to User model
+            request.user.is_verified = True  
             request.user.save()
             otp.delete()
             return Response({
