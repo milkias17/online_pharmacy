@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, User, Loader2, ChevronLeft, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import { ENDPOINTS } from '@/lib/endpoints'; // <--- IMPORT THIS
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -29,14 +33,14 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      // Logic: Sanitize the username (Replace spaces with _ and make lowercase)
       const sanitizedUsername = formData.username.trim().replace(/\s+/g, '_').toLowerCase();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/register/`, {
+      // ✅ USE CENTRALIZED ENDPOINT
+      const res = await fetch(ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: sanitizedUsername, // Use the sanitized version
+          username: sanitizedUsername,
           email: formData.email,
           password: formData.password,
           role: 'user'
@@ -46,37 +50,42 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Show specific error if username is still invalid
         if (data.username) throw new Error("Name can only contain letters, numbers, and underscores.");
         throw new Error(data.detail || "Registration failed");
       }
 
       toast.success("Account created! Redirecting to login...");
-      setTimeout(() => router.push('/auth/login'), 2000);
+      
+      setTimeout(() => {
+        const loginPath = redirectUrl ? `/auth/login?redirect=${redirectUrl}` : '/auth/login';
+        router.push(loginPath);
+      }, 2000);
+      
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="min-h-screen flex bg-white font-sans">
       <Toaster position="top-center" />
       
-      {/* Left Side - Visuals (Consistent with Login) */}
+      {/* Left Side */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-90"></div>
         <div className="relative z-10 p-12 text-white max-w-lg text-left">
           <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-xl border border-white/20">💊</div>
           <h2 className="text-6xl font-black mb-6 tracking-tighter italic leading-none">Medivo</h2>
           <p className="text-xl text-blue-50 leading-relaxed font-medium">
-            Join the distributed network. Access verified inventory and manage your health instantly.
+            Manage your health instantly.
           </p>
         </div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Right Side - Form */}
+      {/* Right Side */}
       <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-16">
         <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-[10px] tracking-[0.2em]">
           <ChevronLeft size={16} /> Back to home
@@ -112,7 +121,7 @@ export default function RegisterPage() {
                   required
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-accent/10 outline-none transition font-medium"
-                  placeholder="you@example.com"
+                  placeholder="abebekebede@gmail.com"
                 />
               </div>
             </div>
@@ -162,7 +171,12 @@ export default function RegisterPage() {
 
           <p className="mt-10 text-center text-gray-500 font-medium">
             Already registered?{' '}
-            <Link href="/auth/login" className="text-accent font-black hover:underline">Sign In</Link>
+             <Link 
+              href={redirectUrl ? `/auth/login?redirect=${redirectUrl}` : "/auth/login"} 
+              className="text-accent font-black hover:underline"
+            >
+              Sign In
+            </Link>
           </p>
         </div>
       </div>

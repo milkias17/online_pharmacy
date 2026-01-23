@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, Loader2, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import toast, { Toaster } from 'react-hot-toast';
+import { ENDPOINTS } from '@/lib/endpoints'; // <--- IMPORT THIS
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+
   const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +25,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_URL}/auth/login/`, {
+      // ✅ USE CENTRALIZED ENDPOINT (Fixes the "undefined" error)
+      const res = await fetch(ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -33,20 +38,24 @@ export default function LoginPage() {
       login({ 
         id: data.userId, 
         email: email, 
-        role: data.role, // 'admin', 'pharmacy_admin', or 'user'
+        role: data.role, 
         name: data.username || email.split('@')[0] 
       }, data.access);
 
       toast.success('Welcome back!');
 
-      // ROLE-BASED REDIRECTION
-      if (data.role === 'admin') {
-        router.push('/admin/dashboard'); // Platform Owner
-      } else if (data.role === 'pharmacy_admin' || data.role === 'pharmacy') {
-        router.push('/pharmacy/orders'); // Pharmacy Manager
+      if (redirectUrl) {
+        router.push(redirectUrl);
       } else {
-        router.push('/customer/browse'); // Regular Patient
+        if (data.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (data.role === 'pharmacy_admin' || data.role === 'pharmacy') {
+          router.push('/pharmacy/orders');
+        } else {
+          router.push('/customer/browse');
+        }
       }
+
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -58,7 +67,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex bg-white font-sans">
       <Toaster position="top-center" />
       
-      {/* Left Side (Visuals) */}
+      {/* Left Side */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent to-primary opacity-90"></div>
         <div className="relative z-10 p-12 text-white">
@@ -70,7 +79,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side (Form) */}
+      {/* Right Side */}
       <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-16">
         <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-accent transition mb-12 w-fit font-bold uppercase text-xs tracking-widest">
           <ChevronLeft size={16} /> Back to home
@@ -131,7 +140,12 @@ export default function LoginPage() {
 
           <p className="mt-10 text-center text-gray-500 font-medium">
             New patient?{' '}
-            <Link href="/auth/register" className="text-accent font-black hover:underline">Register here</Link>
+            <Link 
+              href={redirectUrl ? `/auth/register?redirect=${redirectUrl}` : "/auth/register"} 
+              className="text-accent font-black hover:underline"
+            >
+              Register here
+            </Link>
           </p>
         </div>
       </div>
