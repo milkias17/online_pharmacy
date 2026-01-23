@@ -10,8 +10,12 @@ class TransactionStatus(models.TextChoices):
     REFUNDED = "Refunded", "REFUNDED"
 
 class Transaction(models.Model):
+    # Primary Key
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.CharField(max_length=255)  # ID from Auth Service
+    
+    # Links to other Microservices
+    user_id = models.CharField(max_length=255, help_text="ID from Auth Service")
+    order_id = models.CharField(max_length=255, null=True, blank=True, help_text="ID from Order Service") # <--- ADDED THIS
     
     # Financials
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -30,7 +34,7 @@ class Transaction(models.Model):
     )
     
     # Metadata & Auditing
-    response_dump = models.JSONField(default=dict, blank=True)
+    response_dump = models.JSONField(default=dict, blank=True) # Stores full Chapa response for debugging
     checkout_url = models.URLField(null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -40,4 +44,4 @@ class Transaction(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.tx_ref} - {self.amount} {self.currency} [{self.status}]"
+        return f"{self.tx_ref} | {self.amount} {self.currency} | {self.status}"

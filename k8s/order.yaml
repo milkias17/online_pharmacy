@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: order
-        image: miheret217/order-service:v3 
+        image: miheret217/order-service:v4
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
