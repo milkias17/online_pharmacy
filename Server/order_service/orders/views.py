@@ -21,7 +21,8 @@ class CreateOrderView(APIView):
                     "event": "ORDER_CREATED",
                     "order_id": str(order.id),
                     "user_id": str(order.user_id),
-                    "medicine_id": first_item.get('medicine_id'),
+                    # Use .get() to avoid crashing if one name is missing
+                    "medicine_id": first_item.get('medicine_id') or first_item.get('medicineId'),
                     "quantity": first_item.get('quantity'),
                     "total_amount": float(order.total_amount)
                 }
