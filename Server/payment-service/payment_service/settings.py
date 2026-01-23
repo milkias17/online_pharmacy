@@ -90,6 +90,7 @@ else:
 CHAPA_SECRET_KEY = os.getenv('CHAPA_SECRET_KEY')
 CHAPA_PUBLIC_KEY = os.getenv('CHAPA_PUBLIC_KEY')
 CHAPA_WEBHOOK_SECRET = os.getenv('CHAPA_WEBHOOK_SECRET')
+BASE_URL = os.getenv('BASE_URL')
 
 # Kafka Configuration
 KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka-service:9092')

@@ -51,7 +51,7 @@ class InitiatePaymentView(views.APIView):
                 return_url=data['return_url'], # The 'Payment Success' page on Frontend
                 customization={
                     "title": "Medivo Pharmacy",
-                    "description": f"Order #{data.get('order_id')}"
+                    "description": f"Order {data.get('order_id')}"
                 }
             )
 
