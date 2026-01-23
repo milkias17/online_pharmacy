@@ -36,7 +36,7 @@ class ChapaMixin:
             "last_name": last_name,
             "tx_ref": tx_ref,
             # "callback_url": "https://webhook.site/dummy",  # Replace with your real webhook URL later
-            "callback_url": settings.BASE_URL + reverse_lazy("chapa-webhook"),
+            "callback_url": "https://organic-space-barnacle-567p67qjw6wf7pgj-9000.app.github.dev" + reverse_lazy("chapa-webhook"),
             "return_url": return_url,
             "customization": customization,
         }
