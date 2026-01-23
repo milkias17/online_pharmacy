@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: inventory-backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: inventory
@@ -19,7 +19,6 @@ spec:
         ports:
         - containerPort: 8080
         env:
-          # --- DATABASE CONNECTION (Supabase JDBC) ---
           - name: SPRING_DATASOURCE_URL
             value: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
           - name: SPRING_DATASOURCE_USERNAME
@@ -50,7 +49,6 @@ spec:
             value: "6379"
 
           # --- KAFKA MESSAGE BUS CONNECTION (The Final Fix) ---
-          # This tells Spring Boot where to find the Kafka Broker
           - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
             value: "kafka-service:9092"
           - name: SPRING_KAFKA_CONSUMER_GROUP_ID

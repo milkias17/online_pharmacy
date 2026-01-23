@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: notification-backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: notification
@@ -14,7 +14,6 @@ spec:
     spec:
       containers:
       - name: notification
-        # BUMP TO V4 TO FORCE REFRESH
         image: miheret217/notification-service:v4 
         imagePullPolicy: Always
         ports:

@@ -14,7 +14,6 @@ spec:
     spec:
       containers:
       - name: kafka
-        # Using the official Apache image (KRaft mode - no zookeeper needed)
         image: apache/kafka:3.7.0
         ports:
         - containerPort: 9092
